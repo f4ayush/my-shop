@@ -6,6 +6,7 @@ import { getCurrentUser, isStaff } from "@/lib/auth/session";
 import { getCartView } from "@/lib/cart";
 import { getCategories } from "@/lib/catalog";
 import { BUSINESS } from "@/lib/business";
+import { LEGAL_LINKS } from "@/lib/legal-links";
 import { maskPhone } from "@/lib/phone";
 import "./globals.css";
 
@@ -32,17 +33,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               {user ? (
                 <>
                   {isStaff(user) && (
-                    <>
-                      <Link href="/admin/orders" className="rounded bg-amber-300 px-2 py-0.5 font-medium text-slate-900">
-                        Orders
-                      </Link>
-                      <Link href="/admin/prescriptions" className="rounded bg-amber-300 px-2 py-0.5 font-medium text-slate-900">
-                        Rx queue
-                      </Link>
-                      <Link href="/admin/inventory" className="rounded bg-amber-300 px-2 py-0.5 font-medium text-slate-900">
-                        Stock
-                      </Link>
-                    </>
+                    <Link href="/admin" className="rounded bg-amber-300 px-2 py-0.5 font-medium text-slate-900">
+                      Admin
+                    </Link>
                   )}
                   <Link href="/account/prescriptions" className="hover:underline">
                     Prescriptions
@@ -89,9 +82,18 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               Prescription medicines are dispensed only against a valid prescription verified by our registered
               pharmacist.
             </p>
+            <nav aria-label="Policies" className="flex flex-wrap gap-x-4 gap-y-1 py-1">
+              {LEGAL_LINKS.map((l) => (
+                <Link key={l.href} href={l.href} className="hover:text-brand hover:underline">
+                  {l.label}
+                </Link>
+              ))}
+            </nav>
             <p>
               {BUSINESS.legalName}
               {BUSINESS.address && ` · ${BUSINESS.address}`}
+              {BUSINESS.phone && ` · ${BUSINESS.phone}`}
+              {BUSINESS.email && ` · ${BUSINESS.email}`}
               {BUSINESS.drugLicence && ` · Drug licence: ${BUSINESS.drugLicence}`}
               {BUSINESS.pharmacist && ` · Pharmacist: ${BUSINESS.pharmacist}`}
               {BUSINESS.gstin && ` · GSTIN: ${BUSINESS.gstin}`}

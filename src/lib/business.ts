@@ -9,6 +9,12 @@ export const BUSINESS = {
   gstin: env("STORE_GSTIN"),
   drugLicence: env("STORE_DRUG_LICENCE"),
   pharmacist: env("STORE_PHARMACIST"),
+  email: env("STORE_EMAIL"),
+  phone: env("STORE_PHONE"),
+  grievanceOfficer: env("STORE_GRIEVANCE_OFFICER"),
+  grievanceEmail: env("STORE_GRIEVANCE_EMAIL"),
+  /** Set to "true" once a lawyer has reviewed the legal pages; until then they show a draft banner. */
+  legalReviewed: env("STORE_LEGAL_REVIEWED") === "true",
 };
 
 /** Invoices aren't valid tax invoices until these are set. */

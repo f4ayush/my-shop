@@ -151,8 +151,9 @@ export async function listProducts(where: Prisma.ProductWhereInput, opts: ListOp
 
 // ─── Categories ──────────────────────────────────────────
 
+/** Categories with at least one product on sale (so internal ones like "Uncategorised" stay hidden). */
 export async function getCategories() {
-  return db.category.findMany({
+  const categories = await db.category.findMany({
     orderBy: { name: "asc" },
     select: {
       name: true,
@@ -160,6 +161,7 @@ export async function getCategories() {
       _count: { select: { products: { where: sellable } } },
     },
   });
+  return categories.filter((c) => c._count.products > 0);
 }
 
 export async function getCategoryBySlug(slug: string) {

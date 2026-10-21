@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { startTransition, useActionState } from "react";
 import { approveAction, rejectAction, type ReviewState } from "./actions";
 
 const input = "w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-brand focus:outline-none";
@@ -17,10 +17,16 @@ export function ReviewForms({ orderId, defaults, today }: Props) {
   const [approveState, approve, approving] = useActionState<ReviewState, FormData>(approveAction, {});
   const [rejectState, reject, rejecting] = useActionState<ReviewState, FormData>(rejectAction, {});
   const busy = approving || rejecting;
+  // Submit manually so React's post-action form reset doesn't wipe what the pharmacist typed after an error.
+  const submitWith = (run: (fd: FormData) => void) => (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    startTransition(() => run(formData));
+  };
 
   return (
     <div className="grid gap-6 md:grid-cols-2">
-      <form action={approve} className="space-y-3 rounded-xl border border-green-200 bg-white p-5">
+      <form action={approve} onSubmit={submitWith(approve)} className="space-y-3 rounded-xl border border-green-200 bg-white p-5">
         <h2 className="text-lg font-semibold text-green-800">Approve</h2>
         <input type="hidden" name="orderId" value={orderId} />
         <div>
@@ -58,7 +64,7 @@ export function ReviewForms({ orderId, defaults, today }: Props) {
         {approveState.error && <p className={errorBox}>{approveState.error}</p>}
       </form>
 
-      <form action={reject} className="space-y-3 rounded-xl border border-red-200 bg-white p-5">
+      <form action={reject} onSubmit={submitWith(reject)} className="space-y-3 rounded-xl border border-red-200 bg-white p-5">
         <h2 className="text-lg font-semibold text-red-800">Reject</h2>
         <input type="hidden" name="orderId" value={orderId} />
         <div>
