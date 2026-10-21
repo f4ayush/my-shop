@@ -385,6 +385,25 @@ model Notification {
   @@unique([orderId, template])
 }
 
+/// A stock file uploaded from the billing software: validated into a preview first, then applied.
+model InventoryImport {
+  id           String    @id @default(cuid())
+  createdById  String
+  fileName     String
+  /// PREVIEW → APPLYING → APPLIED, or DISCARDED.
+  status       String    @default("PREVIEW")
+  /// Batches missing from the file are set to zero stock (the file is the full stock list).
+  fullSnapshot Boolean   @default(false)
+  /// Counts and issues shown in the preview and history.
+  summary      Json
+  /// Validated rows waiting to be applied.
+  rows         Json
+  createdAt    DateTime  @default(now())
+  appliedAt    DateTime?
+
+  @@index([createdAt])
+}
+
 /// Pincodes we deliver to, with per-pincode delivery fee.
 model ServiceArea {
   id               String  @id @default(cuid())
