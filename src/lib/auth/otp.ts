@@ -1,5 +1,6 @@
 import { createHmac, randomInt, timingSafeEqual } from "node:crypto";
 import { db } from "@/lib/db";
+import { otpMessage } from "@/lib/sms/templates";
 import { sendSms } from "./sms";
 
 const OTP_TTL_MS = 5 * 60_000;
@@ -38,7 +39,7 @@ export async function sendOtp(phone: string): Promise<SendOtpResult> {
   await db.otpChallenge.create({
     data: { phone, codeHash: hashOtp(phone, code), expiresAt: new Date(now + OTP_TTL_MS) },
   });
-  await sendSms(phone, `${code} is your My Pharmacy login code. It expires in 5 minutes. Do not share it with anyone.`);
+  await sendSms(phone, otpMessage(code));
   return { ok: true };
 }
 

@@ -27,6 +27,8 @@ npm run dev               # http://localhost:3000
 | `npm run db:studio` | Browse the database in Prisma Studio |
 
 ## Notes
+- Staff (pharmacist/admin) log in with an SMS code plus an authenticator app. Set `MFA_ENCRYPTION_KEY` in `.env` first (see `.env.example`).
+- Going live: see [docs/production.md](docs/production.md) for storage, SMS, staff sign-in and headers.
 - Prices are stored in **paise** (integers).
 - Seed products, drug schedules and GST rates are **samples** — confirm real values with your pharmacist/CA.
 - Schedule X items must never be sold online.

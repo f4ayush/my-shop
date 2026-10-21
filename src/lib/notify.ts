@@ -1,10 +1,13 @@
 import { db } from "@/lib/db";
 import { sendSms } from "@/lib/auth/sms";
+import { orderMessage, type SmsTemplateKey } from "@/lib/sms/templates";
 import type { Status } from "@/lib/order-flow";
 
-// Fixed SMS templates (Indian SMS needs DLT-registered templates, so keep these exact once registered).
+// Fixed SMS templates (Indian SMS needs DLT-registered templates, so keep these exact once registered;
+// each key's provider template ID comes from SMS_TEMPLATE_<KEY>, and the order number is variable ##order##).
 // For privacy they mention only the order number and status — never medicines or prescriptions' contents.
-const TEMPLATES: Partial<Record<Status, { key: string; text: (n: string) => string }>> = {
+type OrderTemplateKey = Exclude<SmsTemplateKey, "otp">;
+const TEMPLATES: Partial<Record<Status, { key: OrderTemplateKey; text: (n: string) => string }>> = {
   PLACED: { key: "order.placed", text: (n) => `My Pharmacy: we've received order ${n}. We'll message you when it's confirmed.` },
   AWAITING_RX_REVIEW: {
     key: "order.rx_review",
@@ -47,7 +50,7 @@ export async function notifyOrder(orderId: string): Promise<void> {
     if (!claimed) return;
 
     try {
-      await sendSms(order.user.phone, template.text(order.orderNumber));
+      await sendSms(order.user.phone, orderMessage(template.key, order.orderNumber, template.text(order.orderNumber)));
       await db.notification.update({ where: { id: claimed.id }, data: { status: "sent" } });
     } catch (e) {
       await db.notification.update({

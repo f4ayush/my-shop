@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { getCurrentUser, isStaff } from "@/lib/auth/session";
+import { prescriptionFileHeaders } from "@/lib/security-headers";
 import { getObject } from "@/lib/storage";
 
 // Serves a prescription file to its owner or to pharmacy staff only. Staff views are audit-logged.
@@ -23,13 +24,11 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
   }
 
   const body = await getObject(rx.fileKey);
-  const headers: Record<string, string> = {
+  const ext = rx.mimeType === "application/pdf" ? "pdf" : rx.mimeType === "image/png" ? "png" : "jpg";
+  const headers = {
+    ...prescriptionFileHeaders(rx.mimeType),
     "Content-Type": rx.mimeType,
-    "Content-Disposition": `inline; filename="prescription.${rx.mimeType === "application/pdf" ? "pdf" : rx.mimeType === "image/png" ? "png" : "jpg"}"`,
-    "Cache-Control": "private, no-store",
-    "X-Content-Type-Options": "nosniff",
-    "Referrer-Policy": "no-referrer",
+    "Content-Disposition": `inline; filename="prescription.${ext}"`,
   };
-  if (rx.mimeType.startsWith("image/")) headers["Content-Security-Policy"] = "default-src 'none'; img-src 'self'";
   return new Response(new Uint8Array(body), { headers });
 }

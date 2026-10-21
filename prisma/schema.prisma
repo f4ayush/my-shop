@@ -81,15 +81,20 @@ enum DeliveryStatus {
 // ─── Users ───────────────────────────────────────────────
 
 model User {
-  id           String   @id @default(cuid())
-  phone        String   @unique // E.164, e.g. +919876543210 — customers sign in by OTP
-  name         String?
-  email        String?  @unique
-  role         Role     @default(CUSTOMER)
+  id            String    @id @default(cuid())
+  phone         String    @unique // E.164, e.g. +919876543210 — customers sign in by OTP
+  name          String?
+  email         String?   @unique
+  role          Role      @default(CUSTOMER)
   /// Staff only (pharmacist/admin). Customers use phone OTP and have no password.
-  passwordHash String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  passwordHash  String?
+  /// Staff second factor: TOTP secret, AES-256-GCM sealed with MFA_ENCRYPTION_KEY. Never plaintext.
+  totpSecretEnc String?
+  totpEnabledAt DateTime?
+  /// Last accepted TOTP time step, so a code can't be used twice.
+  totpLastStep  Int?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   addresses             Address[]
   prescriptions         Prescription[] @relation("PrescriptionOwner")
@@ -97,6 +102,7 @@ model User {
   orders                Order[]
   auditLogs             AuditLog[]
   sessions              Session[]
+  recoveryCodes         RecoveryCode[]
   cart                  Cart?
 }
 
@@ -114,16 +120,46 @@ model OtpChallenge {
 }
 
 /// Login session. The cookie holds a random token; only its SHA-256 hash is stored.
+/// Staff sessions start "pending" (SMS code only) and grant nothing until the second factor
+/// is checked; that swaps in a new, short-lived session with mfaVerifiedAt set.
 model Session {
-  id        String   @id @default(cuid())
-  tokenHash String   @unique
-  userId    String
-  expiresAt DateTime
-  createdAt DateTime @default(now())
+  id                 String    @id @default(cuid())
+  tokenHash          String    @unique
+  userId             String
+  /// The user's role when the session began. A role change ends the session.
+  role               Role      @default(CUSTOMER)
+  mfaVerifiedAt      DateTime?
+  mfaAttempts        Int       @default(0)
+  /// Sealed TOTP secret and recovery codes being set up during this pending session; cleared on enrolment.
+  totpSetupSecretEnc String?
+  expiresAt          DateTime
+  createdAt          DateTime  @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+/// One-time staff recovery code. Only a keyed hash is stored.
+model RecoveryCode {
+  id        String    @id @default(cuid())
+  userId    String
+  codeHash  String    @unique
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+/// Fixed-window request counters (per-IP limits on OTP send/verify). The key holds a hash, not the IP.
+model RateLimit {
+  key         String   @id
+  windowStart DateTime
+  count       Int
+
+  @@index([windowStart])
 }
 
 /// Guest carts are found by a random cookie token; on login they merge into the user's cart.
@@ -236,7 +272,7 @@ model InventoryBatch {
 model Prescription {
   id           String             @id @default(cuid())
   userId       String
-  /// Key in the PRIVATE object-storage bucket. Serve only via short-lived signed URLs.
+  /// Key in the PRIVATE object-storage bucket. Served only through /api/prescriptions/[id]/file — never by public or presigned URL.
   fileKey      String
   mimeType     String
   sizeBytes    Int
@@ -282,13 +318,13 @@ model Order {
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
 
-  user         User          @relation(fields: [userId], references: [id])
-  address      Address?      @relation(fields: [addressId], references: [id])
-  prescription Prescription? @relation(fields: [prescriptionId], references: [id])
-  items        OrderItem[]
-  payments     Payment[]
-  delivery     Delivery?
-  invoice      Invoice?
+  user          User           @relation(fields: [userId], references: [id])
+  address       Address?       @relation(fields: [addressId], references: [id])
+  prescription  Prescription?  @relation(fields: [prescriptionId], references: [id])
+  items         OrderItem[]
+  payments      Payment[]
+  delivery      Delivery?
+  invoice       Invoice?
   notifications Notification[]
 
   @@index([userId])

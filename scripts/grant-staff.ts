@@ -1,7 +1,7 @@
 // Grants (or removes) a staff role for a mobile number. Run by someone with database access:
 //   npm run staff:grant -- 9876543210 PHARMACIST
 //   npm run staff:grant -- 9876543210 CUSTOMER     (revoke)
-// The person then logs in normally with an SMS code.
+// The person then logs in with an SMS code and, as staff, sets up an authenticator app.
 import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient, Role } from "../src/generated/prisma/client";
