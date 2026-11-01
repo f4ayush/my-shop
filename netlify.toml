@@ -1,0 +1,8 @@
+# Netlify build for the WhatsApp pilot (see docs/pilot-deploy.md). Settings and secrets are set in the
+# Netlify UI, never here.
+[build]
+  command = "npx prisma generate && npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "22"

@@ -41,7 +41,12 @@ export async function loginAction(prev: LoginState, formData: FormData): Promise
       return { step: intent === "resend" ? "code" : "phone", phone, error: TOO_MANY_REQUESTS };
     }
     if (!(await mayReceiveCode(phone))) return { step: "code", phone, info: STAFF_CODE_SENT };
-    const result = await sendOtp(phone);
+    const result = await sendOtp(phone).catch((e: unknown) => {
+      // Pilot: a failed send (e.g. SMS not set up yet) must look like any other number's reply.
+      if (!whatsappOrders) throw e;
+      console.error("Staff sign-in code not sent:", e instanceof Error ? e.message : "unknown error");
+      return { ok: true } as const;
+    });
     if (!result.ok) return { step: intent === "resend" ? "code" : "phone", phone, error: result.error };
     return { step: "code", phone, info: whatsappOrders ? STAFF_CODE_SENT : `We sent a 6-digit code to ${maskPhone(phone)}.` };
   }

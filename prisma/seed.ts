@@ -6,18 +6,11 @@
 import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient, DrugSchedule, Role } from "../src/generated/prisma/client";
+import { CATEGORIES as categories } from "./categories";
 
 const db = new PrismaClient({
   adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
 });
-
-const categories = [
-  { slug: "medicines", name: "Medicines" },
-  { slug: "wellness", name: "Vitamins & Wellness" },
-  { slug: "personal-care", name: "Personal Care" },
-  { slug: "devices", name: "Health Devices" },
-  { slug: "first-aid", name: "First Aid" },
-];
 
 type SeedProduct = {
   sku: string;

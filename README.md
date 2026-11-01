@@ -34,6 +34,8 @@ Set `WHATSAPP_ORDER_NUMBER` (the shop's WhatsApp number) and restart. Customers 
 
 While it's on, checkout and the account pages redirect away, and only staff can sign in (for `/admin`). Unset the variable and restart to switch accounts, checkout and online payments back on — no code changes needed.
 
+Hosting the pilot on Netlify + Supabase: [docs/pilot-deploy.md](docs/pilot-deploy.md).
+
 ## Notes
 - Staff (pharmacist/admin) log in with an SMS code plus an authenticator app. Set `MFA_ENCRYPTION_KEY` in `.env` first (see `.env.example`).
 - Going live: see [docs/production.md](docs/production.md) for storage, SMS, staff sign-in and headers.
