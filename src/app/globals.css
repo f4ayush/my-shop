@@ -1,10 +1,35 @@
 @import "tailwindcss";
 
+/* Colours from the "Online Pharmacy" design. */
 @theme {
   --color-brand: #0f766e;
-  --color-brand-dark: #115e59;
+  --color-brand-dark: #0b5a54;
+  --color-ink: #10201e;
+  --color-ink-2: #3a4e4b;
+  --color-muted: #4b5e5b;
+  --color-subtle: #5d6f6c;
+  --color-line: #e3ecea;
+  --color-line-strong: #dce6e4;
+  --color-canvas: #f6f9f8;
+  --color-field: #f1f6f5;
+  --color-mint: #e4f2ee;
+  --color-forest: #0b3b37;
+  --color-forest-2: #0f4842;
+  --color-mist: #c6e4de;
+  --color-amber-tint: #fdf0d5;
+  --color-amber-ink: #7a4a00;
+}
+
+/* Plus Jakarta Sans is self-hosted by next/font (root layout), so the CSP's font-src 'self' still holds. */
+@theme inline {
+  --font-sans: var(--font-jakarta), system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
 body {
-  @apply bg-slate-50 text-slate-900 antialiased;
+  @apply bg-canvas font-sans text-ink antialiased;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #6b7d7a;
 }

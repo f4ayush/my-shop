@@ -1,4 +1,4 @@
-# My Pharmacy — online store
+# Raj Healthcares — online store
 
 Next.js 15 (App Router, TypeScript) + Tailwind CSS 4 + Prisma 6 + PostgreSQL 16.
 

@@ -2,7 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { confirmPaymentAction, startPaymentAction } from "@/app/account/orders/payment-actions";
+import { confirmPaymentAction, startPaymentAction } from "@/app/(shop)/account/orders/payment-actions";
+import { BRAND_NAME } from "@/lib/brand";
 
 type RazorpayResponse = { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string };
 type RazorpayInstance = { open(): void; on(event: string, cb: (r: { error?: { description?: string } }) => void): void };
@@ -52,7 +53,7 @@ export function PayNowButton({ orderNumber, autoOpen = false }: { orderNumber: s
       order_id: session.gatewayOrderId,
       amount: session.amountPaise,
       currency: "INR",
-      name: "My Pharmacy",
+      name: BRAND_NAME,
       description: `Order ${orderNumber}`,
       prefill: { contact: session.contact },
       theme: { color: "#0f766e" },
@@ -83,7 +84,7 @@ export function PayNowButton({ orderNumber, autoOpen = false }: { orderNumber: s
       <button
         onClick={pay}
         disabled={state !== "idle"}
-        className="rounded-md bg-brand px-5 py-2 font-medium text-white hover:bg-brand-dark disabled:opacity-60"
+        className="h-12 rounded-[14px] bg-brand px-6 font-bold text-white hover:bg-brand-dark disabled:opacity-60"
       >
         {state === "starting" ? "Opening payment…" : state === "verifying" ? "Confirming payment…" : "Pay now"}
       </button>

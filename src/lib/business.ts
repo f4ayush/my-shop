@@ -1,9 +1,11 @@
 // Seller details for invoices and the footer, read from environment variables.
 
+import { BRAND_NAME } from "@/lib/brand";
+
 const env = (name: string) => process.env[name]?.trim() || null;
 
 export const BUSINESS = {
-  legalName: env("STORE_LEGAL_NAME") ?? "My Pharmacy",
+  legalName: env("STORE_LEGAL_NAME") ?? BRAND_NAME,
   address: env("STORE_ADDRESS"),
   state: env("STORE_STATE"),
   gstin: env("STORE_GSTIN"),

@@ -46,7 +46,7 @@ export async function enrollTotp(pending: PendingMfa, code: string): Promise<Mfa
   const key = mfaMasterKey();
   const setup = JSON.parse(open(key, pending.totpSetupSecretEnc)) as TotpSetup;
   const step = verifyTotp(setup.secret, code.trim(), Date.now());
-  if (step === null) return { ok: false, error: "That code didn't match. Check the app shows My Pharmacy and try the newest code." };
+  if (step === null) return { ok: false, error: "That code didn't match. Check the app shows Raj Healthcares and try the newest code." };
 
   const enrolled = await db.$transaction(async (tx) => {
     // Only if nobody enrolled in the meantime (e.g. a second tab).

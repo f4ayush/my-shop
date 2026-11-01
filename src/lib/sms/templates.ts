@@ -31,7 +31,7 @@ export function otpMessage(code: string): SmsMessage {
   return {
     template: "otp",
     vars: { otp: code },
-    text: `${code} is your My Pharmacy login code. It expires in 5 minutes. Do not share it with anyone.`,
+    text: `${code} is your Raj Healthcares login code. It expires in 5 minutes. Do not share it with anyone.`,
   };
 }
 

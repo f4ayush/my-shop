@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { RX_LABELS, SORT_LABELS, type ListOptions, type RxFilter, type SortKey } from "@/lib/catalog";
+import { btn } from "./ui";
 
 type Props = {
   basePath: string;
@@ -22,9 +23,9 @@ function buildHref(basePath: string, params: Record<string, string | number | un
   return qs ? `${basePath}?${qs}` : basePath;
 }
 
-const pill = "rounded-full border px-3 py-1 text-sm";
-const pillOn = "border-brand bg-brand text-white";
-const pillOff = "border-slate-300 bg-white text-slate-700 hover:border-brand";
+const pill = "rounded-full border px-4 py-2 text-sm font-semibold";
+const pillOn = "border-ink bg-ink text-white hover:text-white";
+const pillOff = "border-line-strong bg-white text-ink hover:border-brand hover:text-ink";
 
 /** Rx filter + sort links. Changing either resets to page 1. */
 export function ListFilters({ basePath, options, keep = {} }: Omit<Props, "pageCount">) {
@@ -42,13 +43,13 @@ export function ListFilters({ basePath, options, keep = {} }: Omit<Props, "pageC
           </Link>
         ))}
       </nav>
-      <nav aria-label="Sort" className="flex flex-wrap items-center gap-2 text-sm">
-        <span className="text-slate-500">Sort:</span>
+      <nav aria-label="Sort" className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
+        <span className="text-muted">Sort:</span>
         {(Object.keys(SORT_LABELS) as SortKey[]).map((sort) => (
           <Link
             key={sort}
             href={buildHref(basePath, { ...keep, rx: options.rx, sort })}
-            className={options.sort === sort ? "font-semibold text-brand" : "text-slate-700 hover:text-brand"}
+            className={options.sort === sort ? "font-bold text-brand" : "text-ink-2 hover:text-brand"}
             aria-current={options.sort === sort ? "true" : undefined}
           >
             {SORT_LABELS[sort]}
@@ -63,24 +64,25 @@ export function Pagination({ basePath, options, keep = {}, pageCount }: Props) {
   if (pageCount <= 1) return null;
   const link = (page: number) => buildHref(basePath, { ...keep, rx: options.rx, sort: options.sort, page });
   const { page } = options;
+  const disabled = `${btn("outline", "sm")} pointer-events-none opacity-40`;
   return (
-    <nav aria-label="Pagination" className="mt-8 flex items-center justify-center gap-4 text-sm">
+    <nav aria-label="Pagination" className="mt-10 flex items-center justify-center gap-4 text-sm">
       {page > 1 ? (
-        <Link href={link(page - 1)} className="text-brand hover:underline">
+        <Link href={link(page - 1)} className={btn("outline", "sm")}>
           ← Previous
         </Link>
       ) : (
-        <span className="text-slate-400">← Previous</span>
+        <span className={disabled}>← Previous</span>
       )}
-      <span>
+      <span className="text-muted">
         Page {page} of {pageCount}
       </span>
       {page < pageCount ? (
-        <Link href={link(page + 1)} className="text-brand hover:underline">
+        <Link href={link(page + 1)} className={btn("outline", "sm")}>
           Next →
         </Link>
       ) : (
-        <span className="text-slate-400">Next →</span>
+        <span className={disabled}>Next →</span>
       )}
     </nav>
   );

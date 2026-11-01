@@ -92,6 +92,7 @@ function cardSelect() {
     slug: true,
     name: true,
     composition: true,
+    manufacturer: true,
     packSize: true,
     mrpPaise: true,
     pricePaise: true,
@@ -110,6 +111,7 @@ export type ProductCardData = {
   slug: string;
   name: string;
   composition: string | null;
+  manufacturer: string | null;
   packSize: string | null;
   mrpPaise: number;
   pricePaise: number;

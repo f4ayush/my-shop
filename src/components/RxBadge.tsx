@@ -1,7 +1,13 @@
-export function RxBadge() {
+/** "Rx required" chip: white on product art, amber elsewhere. */
+export function RxBadge({ onArt = false, className = "" }: { onArt?: boolean; className?: string }) {
   return (
-    <span className="inline-block rounded bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
-      Prescription required
+    <span
+      className={`inline-block rounded-full px-2.5 py-1 text-xs leading-none font-bold text-amber-ink ${onArt ? "bg-white" : "bg-amber-tint"} ${className}`}
+    >
+      <abbr title="Prescription" className="no-underline">
+        Rx
+      </abbr>{" "}
+      required
     </span>
   );
 }

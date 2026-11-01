@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { useActionState } from "react";
+import { btn, errorBox } from "@/components/ui";
 import { mfaAction, type MfaState } from "./actions";
 
 const input =
-  "w-full rounded-md border border-slate-300 px-3 py-2 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30";
-const primary = "w-full rounded-md bg-brand px-4 py-2 font-medium text-white hover:bg-brand-dark disabled:opacity-60";
+  "h-14 w-full rounded-2xl border border-line-strong bg-white px-4 text-center text-lg font-bold focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20";
+const primary = btn("primary", "lg");
 
 export function MfaForm({ mode, next }: { mode: "enroll" | "verify"; next: string }) {
   const [state, action, pending] = useActionState<MfaState, FormData>(mfaAction, {});
@@ -14,10 +15,10 @@ export function MfaForm({ mode, next }: { mode: "enroll" | "verify"; next: strin
   if (state.signedOut) {
     return (
       <div className="space-y-4">
-        <p role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-800">
+        <p role="alert" className={errorBox}>
           {state.error}
         </p>
-        <Link href={`/login?next=${encodeURIComponent(next)}`} className={`${primary} block text-center`}>
+        <Link href={`/login?next=${encodeURIComponent(next)}`} className={primary}>
           Log in again
         </Link>
       </div>
@@ -29,7 +30,7 @@ export function MfaForm({ mode, next }: { mode: "enroll" | "verify"; next: strin
       <input type="hidden" name="next" value={next} />
       <input type="hidden" name="intent" value={mode} />
       <div>
-        <label htmlFor="code" className="mb-1 block text-sm font-medium">
+        <label htmlFor="code" className="mb-2 block text-sm font-bold">
           {mode === "enroll" ? "6-digit code from the app" : "Authenticator code or recovery code"}
         </label>
         <input
@@ -56,7 +57,7 @@ export function MfaForm({ mode, next }: { mode: "enroll" | "verify"; next: strin
         {pending ? "Checking…" : mode === "enroll" ? "Turn on and continue" : "Verify and continue"}
       </button>
       {state.error && (
-        <p role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-800">
+        <p role="alert" className={errorBox}>
           {state.error}
         </p>
       )}

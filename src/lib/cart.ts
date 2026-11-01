@@ -70,6 +70,47 @@ export async function addToCart(productId: string, quantity: number): Promise<Ad
   return { ok: true };
 }
 
+/**
+ * "Order again": adds a past order's products back to the cart, up to what's in stock now. Products no
+ * longer sold or out of stock are skipped. Returns null if the order isn't the user's. Call from a Server Action.
+ */
+export async function addOrderToCart(
+  userId: string,
+  orderNumber: string,
+): Promise<{ added: number; skipped: number } | null> {
+  const order = await db.order.findFirst({
+    where: { orderNumber, userId },
+    select: {
+      items: {
+        select: {
+          productId: true,
+          quantity: true,
+          product: { select: { isActive: true, schedule: true, batches: liveBatches() } },
+        },
+      },
+    },
+  });
+  if (!order) return null;
+
+  // Batches of the same product are separate order lines.
+  const wanted = new Map<string, { quantity: number; stock: number }>();
+  for (const { productId, quantity, product } of order.items) {
+    const sellable = product.isActive && product.schedule !== DrugSchedule.X;
+    const line = wanted.get(productId) ?? { quantity: 0, stock: sellable ? availableQty(product.batches) : 0 };
+    line.quantity += quantity;
+    wanted.set(productId, line);
+  }
+
+  let added = 0;
+  let skipped = 0;
+  for (const [productId, { quantity, stock }] of wanted) {
+    const result = stock > 0 ? await addToCart(productId, Math.min(quantity, stock)) : null;
+    if (result?.ok) added++;
+    else skipped++;
+  }
+  return { added, skipped };
+}
+
 /** Sets a line's quantity; 0 removes it. */
 export async function setCartQuantity(productId: string, quantity: number): Promise<void> {
   const cartId = await findCartId();

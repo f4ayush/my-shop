@@ -1,30 +1,33 @@
 "use client";
 
 import { useActionState } from "react";
+import { ChevronLeftIcon } from "@/components/icons";
+import { btn, errorBox } from "@/components/ui";
 import { loginAction, type LoginState } from "./actions";
 
-const input =
-  "w-full rounded-md border border-slate-300 px-3 py-2 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30";
-const primary = "w-full rounded-md bg-brand px-4 py-2 font-medium text-white hover:bg-brand-dark disabled:opacity-60";
-const link = "text-sm text-brand hover:underline disabled:opacity-60";
+const heading = "text-[32px] leading-tight font-extrabold tracking-[-0.03em]";
+const label = "text-sm font-bold";
+const textButton = "font-bold text-brand-dark hover:underline disabled:opacity-60";
 
 export function LoginForm({ next }: { next: string }) {
   const [state, action, pending] = useActionState<LoginState, FormData>(loginAction, { step: "phone" });
 
   return (
-    <form action={action} className="space-y-4">
+    <form action={action} className="flex flex-col gap-7">
       <input type="hidden" name="next" value={next} />
 
       {state.step === "phone" ? (
         <>
-          <div>
-            <label htmlFor="phone" className="mb-1 block text-sm font-medium">
+          <div className="flex flex-col gap-2">
+            <h1 className={heading}>Sign in or sign up</h1>
+            <p className="text-muted">We’ll send a one-time code to your mobile number. No password needed.</p>
+          </div>
+          <div className="flex flex-col gap-4">
+            <label htmlFor="phone" className={label}>
               Mobile number
             </label>
-            <div className="flex">
-              <span className="rounded-l-md border border-r-0 border-slate-300 bg-slate-100 px-3 py-2 text-slate-600">
-                +91
-              </span>
+            <div className="flex h-14 items-center overflow-hidden rounded-2xl border border-line-strong bg-white focus-within:border-brand focus-within:ring-2 focus-within:ring-brand/20">
+              <span className="flex h-full items-center border-r border-line px-4 font-semibold text-ink-2">+91</span>
               <input
                 id="phone"
                 name="phone"
@@ -34,22 +37,26 @@ export function LoginForm({ next }: { next: string }) {
                 maxLength={14}
                 required
                 defaultValue={state.phone?.slice(3)}
-                placeholder="98765 43210"
-                className={`${input} rounded-l-none`}
+                placeholder="10-digit number"
+                className="h-full min-w-0 flex-1 bg-transparent px-4 text-base focus:outline-none"
               />
             </div>
+            <button name="intent" value="send" disabled={pending} className={btn("primary", "lg")}>
+              {pending ? "Sending…" : "Send code"}
+            </button>
           </div>
-          <button name="intent" value="send" disabled={pending} className={primary}>
-            {pending ? "Sending…" : "Send code"}
-          </button>
         </>
       ) : (
         <>
-          {state.info && <p className="text-sm text-slate-600">{state.info}</p>}
-          <div>
-            <label htmlFor="code" className="mb-1 block text-sm font-medium">
+          <div className="flex flex-col gap-2">
+            <h1 className={heading}>Enter the code</h1>
+            {state.info && <p className="text-muted">{state.info}</p>}
+          </div>
+          <div className="flex flex-col gap-4">
+            <label htmlFor="code" className={label}>
               6-digit code
             </label>
+            {/* One field rather than six boxes, so SMS autofill and screen readers work. */}
             <input
               id="code"
               name="code"
@@ -60,25 +67,34 @@ export function LoginForm({ next }: { next: string }) {
               maxLength={6}
               required
               autoFocus
-              className={`${input} tracking-[0.5em]`}
+              className="h-[60px] w-full rounded-[14px] border-2 border-brand bg-white text-center text-2xl font-bold tracking-[0.5em] focus:outline-none focus:ring-2 focus:ring-brand/20"
             />
+            <button name="intent" value="verify" disabled={pending} className={btn("primary", "lg")}>
+              {pending ? "Verifying…" : "Verify and continue"}
+            </button>
+            <p className="text-center text-sm text-muted">
+              Didn’t get it?{" "}
+              <button name="intent" value="resend" formNoValidate disabled={pending} className={textButton}>
+                Resend code
+              </button>
+            </p>
           </div>
-          <button name="intent" value="verify" disabled={pending} className={primary}>
-            {pending ? "Verifying…" : "Verify and continue"}
+          {/* Shown first but placed after "Verify" in the DOM, so pressing Enter verifies. */}
+          <button
+            name="intent"
+            value="change"
+            formNoValidate
+            disabled={pending}
+            className={`${textButton} order-first -mb-5 flex h-11 items-center gap-1.5 self-start text-sm`}
+          >
+            <ChevronLeftIcon size={18} strokeWidth={2.4} />
+            Change number
           </button>
-          <div className="flex justify-between">
-            <button name="intent" value="change" formNoValidate disabled={pending} className={link}>
-              Change number
-            </button>
-            <button name="intent" value="resend" formNoValidate disabled={pending} className={link}>
-              Resend code
-            </button>
-          </div>
         </>
       )}
 
       {state.error && (
-        <p role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-800">
+        <p role="alert" className={errorBox}>
           {state.error}
         </p>
       )}

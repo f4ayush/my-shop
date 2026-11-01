@@ -1,3 +1,4 @@
+import { db } from "@/lib/db";
 import { OrderStatus, PaymentMethod, PaymentStatus } from "@/generated/prisma/enums";
 
 export const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
@@ -39,6 +40,40 @@ export function paymentLabel(p: PaymentSummary | undefined): string {
     default:
       return "Online payment pending";
   }
+}
+
+/** Paid (or pay-later) orders still on their way to the customer. */
+const IN_PROGRESS: OrderStatus[] = [
+  OrderStatus.PLACED,
+  OrderStatus.AWAITING_RX_REVIEW,
+  OrderStatus.CONFIRMED,
+  OrderStatus.PACKED,
+  OrderStatus.READY_FOR_PICKUP,
+  OrderStatus.OUT_FOR_DELIVERY,
+];
+
+/** The customer's newest in-progress order with its first two products, or null. */
+export async function getActiveOrder(userId: string) {
+  const order = await db.order.findFirst({
+    where: { userId, status: { in: IN_PROGRESS } },
+    orderBy: { createdAt: "desc" },
+    select: {
+      orderNumber: true,
+      status: true,
+      fulfilmentMode: true,
+      prescriptionId: true,
+      items: { orderBy: { id: "asc" }, select: { productId: true, productName: true, quantity: true } },
+    },
+  });
+  if (!order) return null;
+  // Batches of the same product are separate order lines; show them combined.
+  const lines = new Map<string, { productId: string; name: string; quantity: number }>();
+  for (const i of order.items) {
+    const l = lines.get(i.productId) ?? { productId: i.productId, name: i.productName, quantity: 0 };
+    l.quantity += i.quantity;
+    lines.set(i.productId, l);
+  }
+  return { ...order, items: [...lines.values()].slice(0, 2), itemCount: lines.size };
 }
 
 const dateFormat = new Intl.DateTimeFormat("en-IN", { timeZone: "Asia/Kolkata", dateStyle: "medium", timeStyle: "short" });

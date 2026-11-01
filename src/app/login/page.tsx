@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser, getPendingMfa } from "@/lib/auth/session";
 import { firstParam, type RawSearchParams } from "@/lib/catalog";
@@ -13,10 +14,19 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   if (await getPendingMfa()) redirect(`/login/mfa?next=${encodeURIComponent(next)}`);
 
   return (
-    <section className="mx-auto max-w-sm rounded-xl bg-white p-6 shadow-sm">
-      <h1 className="mb-1 text-xl font-bold">Log in or sign up</h1>
-      <p className="mb-6 text-sm text-slate-600">We’ll text you a one-time code. No password needed.</p>
+    <div className="flex flex-col gap-7">
       <LoginForm next={next} />
-    </section>
+      <p className="text-[13px] leading-relaxed text-muted">
+        By continuing you agree to our{" "}
+        <Link href="/terms" className="text-brand hover:underline">
+          Terms of use
+        </Link>{" "}
+        and{" "}
+        <Link href="/privacy" className="text-brand hover:underline">
+          Privacy policy
+        </Link>
+        .
+      </p>
+    </div>
   );
 }

@@ -1,49 +1,67 @@
 import Link from "next/link";
+import { getCartView, MAX_QTY_PER_ITEM } from "@/lib/cart";
 import type { ProductCardData } from "@/lib/catalog";
-import { discountPercent, formatPaise } from "@/lib/money";
+import { discountPercent, formatPrice } from "@/lib/money";
+import { artTone } from "@/lib/product-art";
 import { AddToCartButton } from "./AddToCartButton";
+import { CartStepper } from "./CartStepper";
+import { ProductArt } from "./ProductArt";
 import { RxBadge } from "./RxBadge";
 
-export function ProductCard({ product: p }: { product: ProductCardData }) {
+export function ProductCard({ product: p, cartQty }: { product: ProductCardData; cartQty: number }) {
   const off = discountPercent(p.mrpPaise, p.pricePaise);
+  const href = `/product/${p.slug}`;
   return (
-    <li className="flex flex-col rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition hover:shadow-md">
-      <Link href={`/category/${p.category.slug}`} className="text-xs uppercase text-slate-500 hover:underline">
-        {p.category.name}
+    <li className="flex flex-col gap-2.5 rounded-[18px] border border-line bg-white p-2.5 sm:gap-4 sm:rounded-[22px] sm:p-3.5">
+      <Link
+        href={href}
+        tabIndex={-1}
+        aria-hidden="true"
+        className="relative flex h-[100px] items-center justify-center rounded-xl sm:h-[168px] sm:rounded-2xl"
+        style={{ background: artTone(p.id).tint }}
+      >
+        {p.requiresRx && <RxBadge onArt className="absolute top-2 left-2 sm:top-3 sm:left-3" />}
+        {off > 0 && (
+          <span className="absolute top-3 right-3 rounded-full bg-ink px-2.5 py-1 text-xs leading-none font-bold text-white max-sm:hidden">
+            {off}% off
+          </span>
+        )}
+        <ProductArt id={p.id} packSize={p.packSize} />
       </Link>
-      <Link href={`/product/${p.slug}`} className="mt-1 font-semibold hover:text-brand">
-        {p.name}
-      </Link>
-      {p.composition && <div className="text-sm text-slate-600">{p.composition}</div>}
-      {p.packSize && <div className="text-xs text-slate-500">{p.packSize}</div>}
-      <div className="mt-auto pt-3">
+      <div className="flex flex-col gap-0.5 px-0.5 sm:gap-1 sm:px-1">
+        <Link href={href} className="text-sm leading-snug font-bold text-ink hover:text-brand sm:text-[17px] sm:tracking-[-0.01em]">
+          {p.name}
+        </Link>
+        {p.packSize && <span className="text-xs text-muted sm:text-sm">{p.packSize}</span>}
+      </div>
+      <div className="mt-auto flex items-center justify-between gap-2 px-0.5 pb-0.5 sm:gap-3 sm:px-1 sm:pb-1">
         <div className="flex items-baseline gap-2">
-          <span className="text-lg font-bold">{formatPaise(p.pricePaise)}</span>
+          <span className="text-base font-extrabold sm:text-xl">{formatPrice(p.pricePaise)}</span>
           {off > 0 && (
-            <>
-              <span className="text-sm text-slate-400 line-through">{formatPaise(p.mrpPaise)}</span>
-              <span className="text-xs font-medium text-green-700">{off}% off</span>
-            </>
+            <span className="text-sm text-subtle line-through max-sm:hidden">
+              <span className="sr-only">MRP </span>
+              {formatPrice(p.mrpPaise)}
+            </span>
           )}
         </div>
-        {p.requiresRx && (
-          <div className="mt-2">
-            <RxBadge />
-          </div>
+        {p.inStock && cartQty > 0 ? (
+          <CartStepper productId={p.id} quantity={cartQty} max={MAX_QTY_PER_ITEM} label={p.name} />
+        ) : (
+          <AddToCartButton productId={p.id} label={p.name} disabled={!p.inStock} />
         )}
-        <div className="mt-3">
-          <AddToCartButton productId={p.id} disabled={!p.inStock} />
-        </div>
       </div>
     </li>
   );
 }
 
-export function ProductGrid({ products }: { products: ProductCardData[] }) {
+/** Shows each product's cart quantity (the cart view is cached per request, so this is free). */
+export async function ProductGrid({ products }: { products: ProductCardData[] }) {
+  const cart = await getCartView();
+  const inCart = new Map(cart.lines.map((l) => [l.productId, l.quantity]));
   return (
-    <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <ul className="grid grid-cols-2 gap-3 sm:grid-cols-[repeat(auto-fill,minmax(260px,1fr))] sm:gap-5">
       {products.map((p) => (
-        <ProductCard key={p.id} product={p} />
+        <ProductCard key={p.id} product={p} cartQty={inCart.get(p.id) ?? 0} />
       ))}
     </ul>
   );
