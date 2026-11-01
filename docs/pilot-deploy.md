@@ -10,8 +10,11 @@
 ## 1. Database (Supabase)
 
 1. Sign up at supabase.com and create a project. Region: **East US (Ohio)**. Use a generated password of letters and numbers only (other characters need URL-encoding), and save it in a password manager.
-2. In the project, open **Connect**. Copy the **Transaction pooler** string (port 6543) into `DATABASE_URL` in `.env.pilot`, and the **Session pooler** string (port 5432) into `DIRECT_DATABASE_URL`. Replace `[YOUR-PASSWORD]` in both.
-3. Set up the tables, categories and your admin account:
+2. In the project, open **Connect**. Copy the **Transaction pooler** string (port 6543) into `DATABASE_URL` in `.env.pilot`, and the **Session pooler** string (port 5432) into `DIRECT_DATABASE_URL`. Replace `[YOUR-PASSWORD]` in both. Keep the password only inside those two URLs.
+3. Encryption: Supabase signs its certificates with its own CA, so add to `.env.pilot`:
+   - `DATABASE_CA_CERT=` the contents of [prisma/certs/supabase-root-2021.crt](../prisma/certs/supabase-root-2021.crt) on one line, with `\n` between lines (SHA-256 fingerprint `80:70:25:AD:…:CA:FA`, matching Supabase's download). The site then refuses unverified connections.
+   - `?sslmode=require&sslaccept=strict&sslcert=prisma/certs/supabase-root-2021.crt` at the end of `DIRECT_DATABASE_URL`, for migrations.
+4. Set up the tables, categories and your admin account:
    ```bash
    npm run pilot:migrate
    npm run pilot:categories
@@ -22,7 +25,7 @@
 
 1. Sign up at netlify.com with your GitHub account, then **Add new project → Import an existing project → GitHub → f4ayush/my-shop**.
 2. Branch to deploy: **pilot**. The build settings come from `netlify.toml`; leave them as they are.
-3. Before the first deploy, open **Environment variables → Import from a .env file** and paste the contents of `.env.pilot`, **without** `DIRECT_DATABASE_URL` and without empty lines.
+3. Before the first deploy, open **Environment variables → Import from a .env file** and paste the contents of `.env.pilot`, **without** `DIRECT_DATABASE_URL` and without empty lines. `DATABASE_CA_CERT` must be included.
 4. Deploy, then open the `*.netlify.app` address to check the shop loads.
 
 ## 3. Domain (rajhealthcares.com)
@@ -45,6 +48,7 @@ Changes show on the live site straight away, since both use the same database.
 ## Later
 
 - **Redeploy:** push to `pilot`. After changing a setting in Netlify, use **Deploys → Trigger deploy**.
+- **Database password changed:** replace it in both URLs in `.env.pilot` and in Netlify's `DATABASE_URL`, then redeploy.
 - **Supabase pauses** a free project after 7 days of low activity; resume it from the dashboard. Free projects have no backups, so keep your stock CSVs.
 - **Netlify's free plan** has monthly usage limits; upgrade if the pilot outgrows them.
 - **Full online ordering** needs MSG91, Razorpay, private file storage and hosting in India first: see [production.md](production.md), then remove `WHATSAPP_ORDER_NUMBER`.

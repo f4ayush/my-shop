@@ -5,6 +5,7 @@
 import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client";
+import { pgConfig } from "../src/lib/db-config";
 import { maskPhone, normalizeIndianMobile } from "../src/lib/phone";
 
 async function main() {
@@ -14,7 +15,7 @@ async function main() {
     process.exit(1);
   }
 
-  const db = new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }) });
+  const db = new PrismaClient({ adapter: new PrismaPg(pgConfig()) });
   try {
     const user = await db.user.findUnique({ where: { phone }, select: { id: true } });
     if (!user) {
