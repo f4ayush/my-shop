@@ -6,3 +6,6 @@
 
 [build.environment]
   NODE_VERSION = "22"
+  # Public by design, so not secrets: the shop name (also BRAND_NAME in the code), the phone and WhatsApp
+  # numbers shown on the site, and Supabase's public CA certificate. Real secrets stay scanned.
+  SECRETS_SCAN_OMIT_KEYS = "STORE_LEGAL_NAME,STORE_PHONE,WHATSAPP_ORDER_NUMBER,DATABASE_CA_CERT"
