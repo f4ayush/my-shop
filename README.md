@@ -26,6 +26,14 @@ npm run dev               # http://localhost:3000
 | `npm run db:seed` | Load sample data (idempotent) |
 | `npm run db:studio` | Browse the database in Prisma Studio |
 
+## Pilot mode (WhatsApp orders)
+Set `WHATSAPP_ORDER_NUMBER` (the shop's WhatsApp number) and restart. Customers then:
+1. browse and add medicines to the cart (no account needed);
+2. tap **Order on WhatsApp** in the cart, which opens a chat with the shop with their list, quantities and estimated total typed in;
+3. send a prescription photo in that chat if an item needs one.
+
+While it's on, checkout and the account pages redirect away, and only staff can sign in (for `/admin`). Unset the variable and restart to switch accounts, checkout and online payments back on — no code changes needed.
+
 ## Notes
 - Staff (pharmacist/admin) log in with an SMS code plus an authenticator app. Set `MFA_ENCRYPTION_KEY` in `.env` first (see `.env.example`).
 - Going live: see [docs/production.md](docs/production.md) for storage, SMS, staff sign-in and headers.

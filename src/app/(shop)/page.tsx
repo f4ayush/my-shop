@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CategoryPills } from "@/components/CategoryPills";
 import {
+  ChatIcon,
   CheckIcon,
   ChevronRightIcon,
   LockIcon,
@@ -20,30 +21,46 @@ import { BUSINESS } from "@/lib/business";
 import { firstParam, getCategories, listProducts, type RawSearchParams } from "@/lib/catalog";
 import { progressSteps } from "@/lib/order-flow";
 import { getActiveOrder, ORDER_STATUS_LABEL } from "@/lib/orders";
+import { PRESCRIPTION_MESSAGE, whatsappOrders, whatsappUrl } from "@/lib/whatsapp";
 
 type Props = { searchParams: Promise<RawSearchParams> };
 
 const TRUST = [
   { Icon: ShieldCheckIcon, title: "Genuine medicines", text: "From licensed distributors" },
   { Icon: UserIcon, title: "Pharmacist support", text: "Ask about dosage or substitutes" },
-  { Icon: TruckIcon, title: "Pickup or delivery", text: "Status updates by SMS" },
+  { Icon: TruckIcon, title: "Pickup or delivery", text: whatsappOrders ? "Arranged on WhatsApp" : "Status updates by SMS" },
   { Icon: LockIcon, title: "Private by default", text: "Discreet, sealed packaging" },
 ];
 
-const STEPS = [
-  {
-    title: "Search or upload",
-    text: "Find a medicine by brand or salt name, and upload your prescription once — it stays on file for checkout.",
-  },
-  {
-    title: "Pharmacist verifies",
-    text: "A registered pharmacist checks the prescription, dosage and quantities before anything is packed.",
-  },
-  {
-    title: "Packed, on its way",
-    text: "Your order is sealed and packed for pickup or delivery. Follow each step in My orders and by SMS.",
-  },
-];
+const STEPS = whatsappOrders
+  ? [
+      {
+        title: "Pick your medicines",
+        text: "Find a medicine by brand or salt name and add it to your cart. No account or sign-up needed.",
+      },
+      {
+        title: "Order on WhatsApp",
+        text: "Tap “Order on WhatsApp” in your cart and your list is sent to us. Add a photo of your prescription if you need one.",
+      },
+      {
+        title: "We confirm, then pack",
+        text: "Our pharmacist checks your order and confirms the price and pickup or delivery with you in the chat.",
+      },
+    ]
+  : [
+      {
+        title: "Search or upload",
+        text: "Find a medicine by brand or salt name, and upload your prescription once — it stays on file for checkout.",
+      },
+      {
+        title: "Pharmacist verifies",
+        text: "A registered pharmacist checks the prescription, dosage and quantities before anything is packed.",
+      },
+      {
+        title: "Packed, on its way",
+        text: "Your order is sealed and packed for pickup or delivery. Follow each step in My orders and by SMS.",
+      },
+    ];
 
 export default async function HomePage({ searchParams }: Props) {
   const [categories, user, sp] = await Promise.all([getCategories(), getCurrentUser(), searchParams]);
@@ -54,6 +71,7 @@ export default async function HomePage({ searchParams }: Props) {
     user ? getActiveOrder(user.id) : null,
   ]);
   const rxHref = user ? "#rx" : "/login?next=%2Faccount%2Fprescriptions";
+  const rxWhatsappHref = whatsappOrders ? whatsappUrl(PRESCRIPTION_MESSAGE) : null;
 
   return (
     <div className="flex flex-col">
@@ -79,8 +97,14 @@ export default async function HomePage({ searchParams }: Props) {
             <SearchBox variant="hero" />
           </div>
           <div className="flex flex-wrap gap-3">
-            <QuickLink href={rxHref} tone="bg-amber-tint text-amber-ink" Icon={UploadIcon} label="Upload prescription" />
-            <QuickLink href="/account/orders" tone="bg-[#E7EEFB] text-[#1E3A8A]" Icon={RefreshIcon} label="Reorder past medicines" />
+            {rxWhatsappHref ? (
+              <QuickLink href={rxWhatsappHref} external tone="bg-amber-tint text-amber-ink" Icon={ChatIcon} label="Send prescription on WhatsApp" />
+            ) : (
+              <>
+                <QuickLink href={rxHref} tone="bg-amber-tint text-amber-ink" Icon={UploadIcon} label="Upload prescription" />
+                <QuickLink href="/account/orders" tone="bg-[#E7EEFB] text-[#1E3A8A]" Icon={RefreshIcon} label="Reorder past medicines" />
+              </>
+            )}
           </div>
         </div>
         <div className="flex min-w-0 flex-[1_1_360px] justify-center max-sm:hidden">
@@ -155,24 +179,26 @@ export default async function HomePage({ searchParams }: Props) {
             Keep it ready.
           </h2>
           <p className="max-w-[460px] text-[17px] leading-relaxed text-mist">
-            Upload a clear photo or PDF once. Choose it at checkout, and our pharmacist verifies it before your order is
-            packed.
+            {rxWhatsappHref
+              ? "Send a clear photo of it on WhatsApp. Our pharmacist checks it and confirms your order with you in the chat."
+              : "Upload a clear photo or PDF once. Choose it at checkout, and our pharmacist verifies it before your order is packed."}
           </p>
         </div>
         <div className="min-w-0 flex-[1_1_380px]">
-          {user ? (
+          {rxWhatsappHref ? (
+            <RxDropZone Icon={ChatIcon} title="Send your prescription" note="Photo or PDF · only our pharmacists see it">
+              <a href={rxWhatsappHref} target="_blank" rel="noopener noreferrer" className={`${btn("light")} mt-1.5`}>
+                Send on WhatsApp
+              </a>
+            </RxDropZone>
+          ) : user ? (
             <PrescriptionUploadForm variant="dark" />
           ) : (
-            <div className="flex flex-col items-center gap-3.5 rounded-3xl border-2 border-dashed border-[#4F8F86] bg-forest-2 px-7 py-9 text-center">
-              <span className="flex size-14 items-center justify-center rounded-[18px] bg-white text-forest">
-                <UploadIcon size={26} />
-              </span>
-              <strong className="text-lg">Upload your prescription</strong>
-              <span className="text-sm text-mist">JPG, PNG or PDF · only our pharmacists can see it</span>
+            <RxDropZone Icon={UploadIcon} title="Upload your prescription" note="JPG, PNG or PDF · only our pharmacists can see it">
               <Link href="/login?next=%2Faccount%2Fprescriptions" className={`${btn("light")} mt-1.5`}>
                 Log in to upload
               </Link>
-            </div>
+            </RxDropZone>
           )}
         </div>
       </section>
@@ -180,10 +206,24 @@ export default async function HomePage({ searchParams }: Props) {
   );
 }
 
-function QuickLink({ href, tone, Icon, label }: { href: string; tone: string; Icon: typeof UploadIcon; label: string }) {
+function QuickLink({
+  href,
+  external = false,
+  tone,
+  Icon,
+  label,
+}: {
+  href: string;
+  /** Opens in a new tab (the WhatsApp chat). */
+  external?: boolean;
+  tone: string;
+  Icon: typeof UploadIcon;
+  label: string;
+}) {
   return (
     <Link
       href={href}
+      {...(external && { target: "_blank", rel: "noopener noreferrer" })}
       className="flex items-center gap-3 rounded-2xl bg-white py-3 pr-[18px] pl-3 text-[15px] font-semibold text-ink hover:text-ink hover:shadow-[0_4px_16px_rgba(16,32,30,.08)]"
     >
       <span className={`flex size-10 items-center justify-center rounded-xl ${tone}`}>
@@ -191,6 +231,30 @@ function QuickLink({ href, tone, Icon, label }: { href: string; tone: string; Ic
       </span>
       {label}
     </Link>
+  );
+}
+
+/** The dashed prescription panel on the dark band, for visitors who can't upload here. */
+function RxDropZone({
+  Icon,
+  title,
+  note,
+  children,
+}: {
+  Icon: typeof UploadIcon;
+  title: string;
+  note: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-col items-center gap-3.5 rounded-3xl border-2 border-dashed border-[#4F8F86] bg-forest-2 px-7 py-9 text-center">
+      <span className="flex size-14 items-center justify-center rounded-[18px] bg-white text-forest">
+        <Icon size={26} />
+      </span>
+      <strong className="text-lg">{title}</strong>
+      <span className="text-sm text-mist">{note}</span>
+      {children}
+    </div>
   );
 }
 
@@ -292,7 +356,16 @@ function HowItMovesCard() {
       />
       <div className="h-px bg-line" />
       <p className="text-sm leading-relaxed text-muted">
-        Track every step from <span className="font-semibold text-ink">My orders</span>, with an SMS at each update.
+        {whatsappOrders ? (
+          <>
+            Send your cart on <span className="font-semibold text-ink">WhatsApp</span> and we confirm everything with you
+            in the chat.
+          </>
+        ) : (
+          <>
+            Track every step from <span className="font-semibold text-ink">My orders</span>, with an SMS at each update.
+          </>
+        )}
       </p>
     </div>
   );

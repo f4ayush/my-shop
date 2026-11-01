@@ -9,7 +9,8 @@ const heading = "text-[32px] leading-tight font-extrabold tracking-[-0.03em]";
 const label = "text-sm font-bold";
 const textButton = "font-bold text-brand-dark hover:underline disabled:opacity-60";
 
-export function LoginForm({ next }: { next: string }) {
+/** `staffOnly`: during the WhatsApp pilot only staff sign in. */
+export function LoginForm({ next, staffOnly = false }: { next: string; staffOnly?: boolean }) {
   const [state, action, pending] = useActionState<LoginState, FormData>(loginAction, { step: "phone" });
 
   return (
@@ -19,7 +20,7 @@ export function LoginForm({ next }: { next: string }) {
       {state.step === "phone" ? (
         <>
           <div className="flex flex-col gap-2">
-            <h1 className={heading}>Sign in or sign up</h1>
+            <h1 className={heading}>{staffOnly ? "Staff sign-in" : "Sign in or sign up"}</h1>
             <p className="text-muted">We’ll send a one-time code to your mobile number. No password needed.</p>
           </div>
           <div className="flex flex-col gap-4">

@@ -9,6 +9,7 @@ import { mergeGuestCartInto } from "@/lib/cart";
 import { maskPhone, normalizeIndianMobile } from "@/lib/phone";
 import { hitRateLimit, LIMITS } from "@/lib/rate-limit";
 import { safeNextPath } from "@/lib/safe-redirect";
+import { whatsappOrders } from "@/lib/whatsapp";
 
 export type LoginState = {
   step: "phone" | "code";
@@ -18,6 +19,15 @@ export type LoginState = {
 };
 
 const TOO_MANY_REQUESTS = "Too many attempts from your network. Please try again in a few minutes.";
+// The same reply whether or not the number is staff's, so staff numbers can't be discovered.
+const STAFF_CODE_SENT = "If this number has a staff account, we’ve sent it a 6-digit code.";
+
+/** During the WhatsApp pilot only staff sign in: customers get no code, so no customer accounts are made. */
+async function mayReceiveCode(phone: string): Promise<boolean> {
+  if (!whatsappOrders) return true;
+  const user = await db.user.findUnique({ where: { phone }, select: { role: true } });
+  return !!user && isStaffRole(user.role);
+}
 
 export async function loginAction(prev: LoginState, formData: FormData): Promise<LoginState> {
   const intent = formData.get("intent");
@@ -30,9 +40,10 @@ export async function loginAction(prev: LoginState, formData: FormData): Promise
     if (!(await hitRateLimit(LIMITS.otpSend))) {
       return { step: intent === "resend" ? "code" : "phone", phone, error: TOO_MANY_REQUESTS };
     }
+    if (!(await mayReceiveCode(phone))) return { step: "code", phone, info: STAFF_CODE_SENT };
     const result = await sendOtp(phone);
     if (!result.ok) return { step: intent === "resend" ? "code" : "phone", phone, error: result.error };
-    return { step: "code", phone, info: `We sent a 6-digit code to ${maskPhone(phone)}.` };
+    return { step: "code", phone, info: whatsappOrders ? STAFF_CODE_SENT : `We sent a 6-digit code to ${maskPhone(phone)}.` };
   }
 
   if (intent === "verify") {

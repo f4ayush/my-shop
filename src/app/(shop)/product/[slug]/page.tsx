@@ -9,6 +9,7 @@ import { MAX_QTY_PER_ITEM } from "@/lib/cart";
 import { getAlternatives, getProductBySlug } from "@/lib/catalog";
 import { discountPercent, formatPrice } from "@/lib/money";
 import { artTone } from "@/lib/product-art";
+import { whatsappOrders } from "@/lib/whatsapp";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -77,8 +78,10 @@ export default async function ProductPage({ params }: Props) {
               <div className="flex flex-col gap-1 text-sm leading-normal">
                 <strong className="text-[15px]">Prescription required</strong>
                 <span>
-                  Add to cart now and upload a valid prescription at checkout. Our pharmacist verifies it before your
-                  order is packed.
+                  {whatsappOrders
+                    ? "Add it to your cart and send a photo of a valid prescription in the WhatsApp chat when you order."
+                    : "Add to cart now and upload a valid prescription at checkout."}{" "}
+                  Our pharmacist verifies it before your order is packed.
                 </span>
               </div>
             </div>

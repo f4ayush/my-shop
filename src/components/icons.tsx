@@ -57,6 +57,7 @@ export const CartIcon = icon(
     <circle cx="17" cy="20.5" r="1" />
   </>,
 );
+export const ChatIcon = icon(<path d="M20.5 11.5a8.5 8.5 0 0 1-12.4 7.6L3.5 20.5l1.4-4.4A8.5 8.5 0 1 1 20.5 11.5z" />);
 export const ShieldCheckIcon = icon(
   <>
     <path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z" />

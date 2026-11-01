@@ -11,11 +11,14 @@ import { RX_STATUS_LABEL } from "@/lib/rx/labels";
 import { usablePrescriptions } from "@/lib/rx/prescriptions";
 import { onlinePaymentsEnabled } from "@/lib/payments/razorpay";
 import { pickupSlots } from "@/lib/store";
+import { whatsappOrders } from "@/lib/whatsapp";
 import { CheckoutForm, type AddressOption } from "./CheckoutForm";
 
 export const metadata: Metadata = { title: "Checkout", robots: { index: false } };
 
 export default async function CheckoutPage() {
+  // Pilot: orders go from the cart to WhatsApp.
+  if (whatsappOrders) redirect("/cart");
   const user = await requireUser("/checkout");
   const cart = await getCartView();
   if (cart.lines.length === 0 || cart.hasIssues) redirect("/cart");

@@ -6,8 +6,9 @@ import { getCartView } from "@/lib/cart";
 import { getCategories } from "@/lib/catalog";
 import { LEGAL_LINKS } from "@/lib/legal-links";
 import { formatPrice } from "@/lib/money";
+import { HELLO_MESSAGE, PRESCRIPTION_MESSAGE, whatsappOrders, whatsappUrl } from "@/lib/whatsapp";
 import { BrandLogo } from "./BrandLogo";
-import { CartIcon, ChevronRightIcon, UploadIcon, UserIcon } from "./icons";
+import { CartIcon, ChatIcon, ChevronRightIcon, UploadIcon, UserIcon } from "./icons";
 import { MobileTabBar } from "./MobileTabBar";
 import { SearchBox } from "./SearchBox";
 import { container } from "./ui";
@@ -22,10 +23,12 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
       <main className={`${container} flex-1 pt-6 pb-20 sm:pt-7 sm:pb-24`}>{children}</main>
       <SiteFooter categories={categories} />
       {cart.itemCount > 0 && <MobileCartBar count={cart.itemCount} subtotalPaise={cart.subtotalPaise} />}
-      <MobileTabBar />
+      <MobileTabBar whatsappHref={whatsappOrders ? whatsappUrl(HELLO_MESSAGE) : null} />
     </div>
   );
 }
+
+const headerLink = "hidden h-11 items-center gap-2 rounded-xl px-3.5 text-sm font-semibold text-ink hover:bg-field sm:flex";
 
 function SiteHeader({ user, cartCount }: { user: CurrentUser | null; cartCount: number }) {
   return (
@@ -45,20 +48,26 @@ function SiteHeader({ user, cartCount }: { user: CurrentUser | null; cartCount: 
                 Admin
               </Link>
             )}
-            <Link
-              href="/account/prescriptions"
-              className="hidden h-11 items-center gap-2 rounded-xl px-3.5 text-sm font-semibold text-ink hover:bg-field sm:flex"
-            >
-              <UploadIcon />
-              Upload Rx
-            </Link>
-            <Link
-              href="/account"
-              aria-label={user ? "Your account" : "Log in"}
-              className="hidden size-11 items-center justify-center rounded-xl text-ink hover:bg-field sm:flex"
-            >
-              <UserIcon size={22} />
-            </Link>
+            {whatsappOrders ? (
+              <a href={whatsappUrl(PRESCRIPTION_MESSAGE)} target="_blank" rel="noopener noreferrer" className={headerLink}>
+                <ChatIcon />
+                Send Rx on WhatsApp
+              </a>
+            ) : (
+              <>
+                <Link href="/account/prescriptions" className={headerLink}>
+                  <UploadIcon />
+                  Upload Rx
+                </Link>
+                <Link
+                  href="/account"
+                  aria-label={user ? "Your account" : "Log in"}
+                  className="hidden size-11 items-center justify-center rounded-xl text-ink hover:bg-field sm:flex"
+                >
+                  <UserIcon size={22} />
+                </Link>
+              </>
+            )}
             <Link
               href="/cart"
               className="flex h-11 items-center gap-2.5 rounded-xl bg-ink px-4 text-sm font-semibold text-white hover:bg-black"
@@ -83,7 +92,7 @@ const linkClass = "text-brand hover:text-brand-dark hover:underline";
 
 function SiteFooter({ categories }: { categories: { name: string; slug: string }[] }) {
   const help = [
-    { href: "/account/orders", label: "Track order" },
+    ...(whatsappOrders ? [] : [{ href: "/account/orders", label: "Track order" }]),
     ...LEGAL_LINKS.filter((l) => ["/returns", "/shipping", "/grievance"].includes(l.href)),
   ];
   const legal = LEGAL_LINKS.filter((l) => ["/privacy", "/terms"].includes(l.href));

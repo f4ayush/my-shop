@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CartStepper } from "@/components/CartStepper";
-import { CheckIcon, FileIcon, PinIcon, TrashIcon } from "@/components/icons";
+import { ChatIcon, CheckIcon, FileIcon, PinIcon, TrashIcon } from "@/components/icons";
 import { ProductThumb } from "@/components/ProductArt";
 import { RxBadge } from "@/components/RxBadge";
 import { btn, card, pageTitle } from "@/components/ui";
@@ -9,6 +9,7 @@ import { getCurrentUser } from "@/lib/auth/session";
 import { getCartView, MAX_QTY_PER_ITEM, type CartLine } from "@/lib/cart";
 import { firstParam, type RawSearchParams } from "@/lib/catalog";
 import { formatPrice } from "@/lib/money";
+import { orderMessage, whatsappOrders, whatsappUrl } from "@/lib/whatsapp";
 import { updateCartAction } from "./actions";
 
 export const metadata: Metadata = { title: "Cart", robots: { index: false } };
@@ -62,15 +63,22 @@ export default async function CartPage({ searchParams }: { searchParams: Promise
   const saved = mrpTotal - cart.subtotalPaise;
   const rxCount = cart.lines.filter((l) => l.requiresRx).length;
   const canCheckout = !cart.hasIssues;
+  const checkoutLabel = whatsappOrders ? "Order on WhatsApp" : "Proceed to checkout";
+  const totalLabel = whatsappOrders ? "Estimated total" : "To pay";
   const checkout = () =>
-    canCheckout ? (
-      <Link href={user ? "/checkout" : "/login?next=%2Fcheckout"} className={btn("primary", "lg")}>
-        {user ? "Proceed to checkout" : "Log in to check out"}
-      </Link>
-    ) : (
+    !canCheckout ? (
       <button disabled className={btn("outline", "lg")}>
-        Proceed to checkout
+        {checkoutLabel}
       </button>
+    ) : whatsappOrders ? (
+      <a href={whatsappUrl(orderMessage(cart))} target="_blank" rel="noopener noreferrer" className={btn("primary", "lg")}>
+        <ChatIcon size={20} />
+        {checkoutLabel}
+      </a>
+    ) : (
+      <Link href={user ? "/checkout" : "/login?next=%2Fcheckout"} className={btn("primary", "lg")}>
+        {user ? checkoutLabel : "Log in to check out"}
+      </Link>
     );
 
   return (
@@ -128,8 +136,10 @@ export default async function CartPage({ searchParams }: { searchParams: Promise
                 <h2 className="text-lg font-bold">Prescription needed</h2>
                 <p className="text-sm text-muted">
                   {plural(rxCount, "item", "items")} in your cart {rxCount === 1 ? "needs" : "need"} a valid prescription.
-                  You’ll upload one, or choose one you’ve already uploaded, at checkout. Our pharmacist verifies it
-                  before your order is packed.
+                  {whatsappOrders
+                    ? " Send a clear photo of it in the WhatsApp chat with your order."
+                    : " You’ll upload one, or choose one you’ve already uploaded, at checkout."}{" "}
+                  Our pharmacist verifies it before your order is packed.
                 </p>
               </div>
             </section>
@@ -142,7 +152,9 @@ export default async function CartPage({ searchParams }: { searchParams: Promise
             <div className="flex flex-col gap-1">
               <h2 className="text-lg font-bold">Pickup or delivery</h2>
               <p className="text-sm text-muted">
-                Choose free store pickup or home delivery at checkout. Delivery fees depend on your area.
+                {whatsappOrders
+                  ? "Tell us in the chat whether you’ll pick up from the store (free) or want home delivery. Delivery fees depend on your area."
+                  : "Choose free store pickup or home delivery at checkout. Delivery fees depend on your area."}
               </p>
             </div>
           </section>
@@ -161,12 +173,12 @@ export default async function CartPage({ searchParams }: { searchParams: Promise
             </div>
             <div className="flex justify-between gap-3">
               <dt className="text-ink-2">Delivery</dt>
-              <dd className="font-semibold">At checkout</dd>
+              <dd className="font-semibold">{whatsappOrders ? "Confirmed on WhatsApp" : "At checkout"}</dd>
             </div>
           </dl>
           <div className="h-px bg-line" />
           <div className="flex items-baseline justify-between gap-3">
-            <span className="text-base font-bold">To pay</span>
+            <span className="text-base font-bold">{totalLabel}</span>
             <span className="text-3xl font-extrabold tracking-[-0.02em]">{formatPrice(cart.subtotalPaise)}</span>
           </div>
           {saved > 0 && (
@@ -180,8 +192,10 @@ export default async function CartPage({ searchParams }: { searchParams: Promise
           )}
           <p className="text-xs leading-relaxed text-muted">
             Prices include GST.
-            {rxCount > 0 &&
-              " Prescription items are packed only after our pharmacist approves your prescription; if it isn’t accepted, any online payment is refunded."}
+            {whatsappOrders
+              ? " We confirm the final amount in the chat before packing. Prescription items are packed only after our pharmacist approves your prescription."
+              : rxCount > 0 &&
+                " Prescription items are packed only after our pharmacist approves your prescription; if it isn’t accepted, any online payment is refunded."}
           </p>
         </aside>
       </div>
@@ -189,7 +203,7 @@ export default async function CartPage({ searchParams }: { searchParams: Promise
       {/* Phones: the total and checkout button stay on screen. */}
       <div className="fixed inset-x-0 bottom-0 z-40 flex items-center gap-3 border-t border-line bg-white px-4 pt-3 pb-[max(20px,env(safe-area-inset-bottom))] sm:hidden">
         <div className="flex flex-col">
-          <span className="text-xs text-muted">To pay</span>
+          <span className="text-xs text-muted">{totalLabel}</span>
           <strong className="text-xl">{formatPrice(cart.subtotalPaise)}</strong>
         </div>
         <div className="flex-1">{checkout()}</div>

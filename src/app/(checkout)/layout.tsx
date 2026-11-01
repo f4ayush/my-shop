@@ -5,19 +5,25 @@ import { LockIcon } from "@/components/icons";
 import { container } from "@/components/ui";
 import { BRAND_NAME } from "@/lib/brand";
 import { LEGAL_LINKS } from "@/lib/legal-links";
+import { whatsappOrders } from "@/lib/whatsapp";
 
 // Cart and checkout: a quiet header with the steps instead of the full shop navigation.
+// During the WhatsApp pilot the cart is the only page here, so there are no steps.
 export default function CheckoutLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
       <header className="border-b border-line bg-white print:hidden">
         <div className={`${container} flex flex-wrap items-center justify-between gap-4 py-4`}>
           <BrandLogo />
-          <CheckoutSteps />
-          <span className="flex items-center gap-2 text-[13px] font-medium text-muted">
-            <LockIcon size={16} />
-            Secure checkout
-          </span>
+          {!whatsappOrders && (
+            <>
+              <CheckoutSteps />
+              <span className="flex items-center gap-2 text-[13px] font-medium text-muted">
+                <LockIcon size={16} />
+                Secure checkout
+              </span>
+            </>
+          )}
         </div>
       </header>
       <main className={`${container} flex-1 pt-8 pb-28 sm:pb-24`}>{children}</main>
